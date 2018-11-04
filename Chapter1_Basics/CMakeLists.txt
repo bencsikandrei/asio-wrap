@@ -1,5 +1,4 @@
-project(basics CXX)
+project(tcp CXX)
 
-add_executable(${PROJECT_NAME} client.cpp)
-
-target_link_libraries(${PROJECT_NAME} pthread)
+add_subdirectory(client)
+add_subdirectory(server)
