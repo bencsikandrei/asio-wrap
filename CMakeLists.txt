@@ -10,4 +10,5 @@ include_directories(
     /home/andrei/ThirdParty/asio-standalone
 )
 
-add_subdirectory(Chapter1_Basics)
+add_subdirectory(TCP)
+add_subdirectory(HTTP)
