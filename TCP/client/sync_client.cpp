@@ -11,30 +11,54 @@ namespace synch
 class TcpClient
 {
   public:
-    explicit TcpClient(std::string ipAddr, uint16_t port)
-        : mService{}, mEndPoint{
-                          asio::ip::address::from_string(ipAddr), port},
+    explicit TcpClient()
+        : mService{},
           mSocket{mService}
     {
     }
-    void connect()
+    void connect(std::string ipAddr, uint16_t port)
     {
-        mSocket.connect(mEndPoint);
+        mSocket.connect({asio::ip::address::from_string(ipAddr), port});
+    }
+    template <typename Buffer>
+    size_t write(Buffer &&buf)
+    {
+        return mSocket.write_some(std::forward<Buffer>(buf));
+    }
+    template <typename Buffer>
+    size_t read(Buffer &&buf)
+    {
+        return mSocket.read_some(std::forward<Buffer>(buf));
+    }
+    void shutdown() {
+        mSocket.shutdown(asio::ip::tcp::socket::shutdown_receive);
+    }
+    void close() {
+        mSocket.close();
+    }
+    size_t available() const {
+        return mSocket.available();
     }
 
   private:
     asio::io_service mService;
-    asio::ip::tcp::endpoint mEndPoint;
     asio::ip::tcp::socket mSocket;
 };
 } // namespace synch
 
 int main()
 {
-    synch::TcpClient tcpClient{"127.0.0.1", 2001};
+    synch::TcpClient tcpClient{};
+    char buf[1024];
     try
     {
-        tcpClient.connect();
+        tcpClient.connect("127.0.0.1", 2001);
+        tcpClient.write(asio::buffer("Hello!"));
+        std::clog << "Bytes available for synch read: " << tcpClient.available() << '\n';
+        size_t readBytes = tcpClient.read(asio::buffer(buf, 1024));
+        std::clog << "Data received: " << buf << ", size: " << readBytes << '\n';
+        tcpClient.shutdown();
+        tcpClient.close();
     }
     catch (std::exception const &e)
     {
